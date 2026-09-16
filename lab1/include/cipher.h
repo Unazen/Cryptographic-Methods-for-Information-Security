@@ -12,7 +12,8 @@
  * @param key - числовой сдвиг (ключ)
  * @return 0 при успешном шифровании, 1 при ошибке
  */
-int caesar_encrypt(const char* plaintext, char* ciphertext, int key);
+int caesar_encrypt(const char *plaintext, char *ciphertext, int key)
+;
 
 /**
  * caesar_decrypt
@@ -22,7 +23,7 @@ int caesar_encrypt(const char* plaintext, char* ciphertext, int key);
  * @param key - числовой сдвиг (ключ)
  * @return 0 при успешном дешифровании, 1 при ошибке
  */
-int caesar_decrypt(const char* ciphertext, char* plaintext, int key);
+int caesar_decrypt(const char *ciphertext, char *plaintext, int key);
 
 /**
  * vigenere_encrypt
@@ -32,7 +33,7 @@ int caesar_decrypt(const char* ciphertext, char* plaintext, int key);
  * @param key - строковый ключ (последовательность букв)
  * @return 0 при успешном шифровании, 1 при ошибке
  */
-int vigenere_encrypt(const char* plaintext, char* ciphertext, const char* key);
+int vigenere_encrypt(const char *plaintext, char *ciphertext, const char *key);
 
 /**
  * vigenere_decrypt
@@ -42,6 +43,6 @@ int vigenere_encrypt(const char* plaintext, char* ciphertext, const char* key);
  * @param key - строковый ключ
  * @return 0 при успешном дешифровании, 1 при ошибке
  */
-int vigenere_decrypt(const char* ciphertext, char* plaintext, const char* key);
+int vigenere_decrypt(const char *ciphertext, char *plaintext, const char *key);
 
 #endif /* CIPHERS_H */
