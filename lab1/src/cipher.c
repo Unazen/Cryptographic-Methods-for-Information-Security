@@ -124,10 +124,7 @@ static int key_char_to_shift(char c)
 /*
  * Шифр Виженера.
  */
-int vigenere_encrypt(
-	const char *plaintext,
-	char *ciphertext,
-	const char *key)
+int vigenere_encrypt(const char *plaintext, char *ciphertext, const char *key)
 {
 	size_t i;
 	size_t key_index = 0;
@@ -184,7 +181,7 @@ int vigenere_encrypt(
 }
 
 /*
- * Дешифрирование Виженера.
+ * Расшифровка Виженера.
  */
 int vigenere_decrypt(
 	const char *ciphertext,
