@@ -27,10 +27,10 @@ namespace
 		return BigInt::fromDec(input);
 	}
 
-	BigInt readHex(const string &value)
+	/* BigInt readHex(const string &value)
 	{
 		return BigInt(value);
-	}
+	} */
 
 	void printNumber(const string &label, const BigInt &value)
 	{
@@ -105,8 +105,8 @@ namespace
 
 		printNumber("Результат mod_exp: ", ordinary);
 
-		if (mod.toU64OrDie() == 0)
-			throw invalid_argument("Некорректный модуль.");
+		if (mod == BigInt::fromU64(0))
+			throw invalid_argument("Модуль не должен быть равен нулю.");
 
 		try
 		{

@@ -1,4 +1,3 @@
-
 #include "bigmath.hpp"
 
 #include <algorithm>
@@ -88,7 +87,7 @@ namespace
 		return result.substr(first);
 	}
 
-	Words addWords(const Words &a, const Words &b)
+	/* Words addWords(const Words &a, const Words &b)
 	{
 		Words result(std::max(a.size(), b.size()), 0);
 		uint64_t carry = 0;
@@ -108,7 +107,7 @@ namespace
 
 		normalize(result);
 		return result;
-	}
+	} */
 
 	Words subtractWords(const Words &a, const Words &b)
 	{
@@ -511,7 +510,14 @@ BigInt::~BigInt()
 
 std::string BigInt::toHex() const
 {
-	return toHexWords(getWords(*this));
+	Words words;
+
+	for (size_t i = 0; i < length_; ++i)
+		words.push_back(digits_[i]);
+
+	normalize(words);
+
+	return toHexWords(words);
 }
 
 uint64_t BigInt::toU64OrDie() const
