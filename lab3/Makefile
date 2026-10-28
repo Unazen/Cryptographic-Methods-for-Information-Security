@@ -3,7 +3,7 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -Wpedantic -O2
 
 TARGET = lab3
 SOURCES = main.cpp belt.cpp
-HEADERS = BELT_HPP
+HEADERS = belt.hpp
 
 all: $(TARGET)
 

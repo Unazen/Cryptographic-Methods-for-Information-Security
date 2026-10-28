@@ -11,7 +11,7 @@ class BeltCipher
 public:
     static constexpr size_t BLOCK_SIZE = 16;  // 128 бит
     static constexpr size_t KEY_SIZE   = 32;  // 256 бит
-    static constexpr size_t MAC_SIZE   = 16;  // размер MAC
+    static constexpr size_t MAC_SIZE   = 8;  // размер MAC
 
     BeltCipher() = default;
     explicit BeltCipher(const uint8_t key[KEY_SIZE]);

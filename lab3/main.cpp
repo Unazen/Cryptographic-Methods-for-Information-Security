@@ -8,6 +8,9 @@
 #include <string>
 #include <vector>
 
+#include <limits>
+#include <stdexcept>
+
 using namespace std;
 
 static vector<uint8_t> readFile(const string &filename)
@@ -100,14 +103,23 @@ int main()
 {
 	try
 	{
-		cout << "BELT - STB 34.101.31\n";
-		cout << "1. Enter message from console\n";
-		cout << "2. Read message from file\n";
-		cout << "Choose: ";
+		cout << "====================================\n";
+		cout << " Лабораторная работа №3\n";
+		cout << " Криптостандарт BELT (СТБ 34.101.31)\n";
+		cout << "====================================\n";
+		cout << "1. Ввести сообщение с клавиатуры\n";
+		cout << "2. Прочитать сообщение из файла\n";
+		cout << "Ваш выбор: ";
 
 		int choice;
-		cin >> choice;
-		// cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+		if (!(cin >> choice))
+		{
+			cerr << "Ошибка: необходимо ввести номер пункта меню.\n";
+			return 1;
+		}
+
+		cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
 		vector<uint8_t> message;
 
@@ -115,8 +127,12 @@ int main()
 		{
 			string text;
 
-			cout << "Enter message: ";
-			getline(cin, text);
+			cout << "Введите текст сообщения: ";
+			if (!getline(cin, text))
+			{
+				cerr << "Ошибка: не удалось прочитать сообщение.\n";
+				return 1;
+			}
 
 			message = toBytes(text);
 		}
@@ -124,25 +140,40 @@ int main()
 		{
 			string filename;
 
-			cout << "Input filename: ";
-			getline(cin, filename);
+			cout << "Введите имя входного файла: ";
+			if (!getline(cin, filename) || filename.empty())
+			{
+				cerr << "Ошибка: имя файла не указано.\n";
+				return 1;
+			}
 
 			message = readFile(filename);
 		}
 		else
 		{
-			cout << "Invalid choice\n";
+			cerr << "Ошибка: такого пункта меню нет.\n";
 			return 1;
 		}
 
-		auto key = readHex("Enter 256-bit key (64 hex chars): ", 32);
-		auto iv = readHex("Enter IV (32 hex chars): ", 16);
+		if (message.empty())
+		{
+			cerr << "Ошибка: сообщение пустое.\n";
+			return 1;
+		}
+
+		auto key = readHex(
+			"Введите ключ длиной 256 бит (64 шестнадцатеричных символа): ",
+			32);
+
+		auto iv = readHex(
+			"Введите IV длиной 128 бит (32 шестнадцатеричных символа): ",
+			16);
 
 		BeltCipher cipher(key.data());
 
 		if (!BeltCipher::libraryReady())
 		{
-			cout << "BELT library is not initialized\n";
+			cerr << "Ошибка: библиотека BELT не инициализирована.\n";
 			return 1;
 		}
 
@@ -151,24 +182,39 @@ int main()
 		vector<uint8_t> encryptedCBC;
 		vector<uint8_t> decryptedCBC;
 
+		cout << "\n--- Режим ECB ---\n";
+
 		if (cipher.encryptECB(
 				message.data(), message.size(), encryptedECB) != 0)
 		{
-			cout << "ECB encryption failed\n";
+			cerr << "Ошибка: не удалось зашифровать сообщение в режиме ECB.\n";
+			cerr << "Проверьте длину сообщения: требуется не менее 16 байт.\n";
 			return 1;
 		}
 
 		if (cipher.decryptECB(
 				encryptedECB.data(), encryptedECB.size(), decryptedECB) != 0)
 		{
-			cout << "ECB decryption failed\n";
+			cerr << "Ошибка: не удалось расшифровать сообщение в режиме ECB.\n";
 			return 1;
 		}
 
+		printHex("Зашифрованное сообщение ECB: ", encryptedECB);
+
+		cout << "Результат расшифрования ECB: "
+			 << (message == decryptedECB
+					 ? "совпадает с исходным сообщением"
+					 : "НЕ совпадает с исходным сообщением")
+			 << '\n';
+
+		cout << "\n--- Режим CBC ---\n";
+
 		if (cipher.encryptCBC(
-				message.data(), message.size(), iv.data(), encryptedCBC) != 0)
+				message.data(), message.size(),
+				iv.data(), encryptedCBC) != 0)
 		{
-			cout << "CBC encryption failed\n";
+			cerr << "Ошибка: не удалось зашифровать сообщение в режиме CBC.\n";
+			cerr << "Проверьте сообщение и вектор инициализации IV.\n";
 			return 1;
 		}
 
@@ -176,42 +222,57 @@ int main()
 				encryptedCBC.data(), encryptedCBC.size(),
 				iv.data(), decryptedCBC) != 0)
 		{
-			cout << "CBC decryption failed\n";
+			cerr << "Ошибка: не удалось расшифровать сообщение в режиме CBC.\n";
 			return 1;
 		}
 
-		printHex("ECB ciphertext: ", encryptedECB);
-		printHex("CBC ciphertext: ", encryptedCBC);
+		printHex("Зашифрованное сообщение CBC: ", encryptedCBC);
 
-		cout << "ECB decryption correct: "
-			 << boolalpha << (message == decryptedECB) << '\n';
+		cout << "Результат расшифрования CBC: "
+			 << (message == decryptedCBC
+					 ? "совпадает с исходным сообщением"
+					 : "НЕ совпадает с исходным сообщением")
+			 << '\n';
 
-		cout << "CBC decryption correct: "
-			 << boolalpha << (message == decryptedCBC) << '\n';
+		cout << "\n--- Вычисление имитовставки MAC ---\n";
 
 		vector<uint8_t> mac(BeltCipher::MAC_SIZE);
 
 		if (cipher.computeMAC(
 				message.data(), message.size(), mac.data()) != 0)
 		{
-			cout << "MAC calculation failed\n";
+			cerr << "Ошибка: не удалось вычислить имитовставку MAC.\n";
 			return 1;
 		}
 
-		printHex("MAC: ", mac);
+		printHex("Имитовставка MAC: ", mac);
 
-		if (!writeFile("encrypted_ecb.bin", encryptedECB) ||
-			!writeFile("encrypted_cbc.bin", encryptedCBC))
+		cout << "\n--- Сохранение результатов ---\n";
+
+		if (!writeFile("encrypted_ecb.bin", encryptedECB))
 		{
-			cout << "Could not write encrypted files\n";
+			cerr << "Ошибка: не удалось сохранить файл encrypted_ecb.bin.\n";
 			return 1;
 		}
 
-		cout << "Encrypted files saved successfully\n";
+		if (!writeFile("encrypted_cbc.bin", encryptedCBC))
+		{
+			cerr << "Ошибка: не удалось сохранить файл encrypted_cbc.bin.\n";
+			return 1;
+		}
+
+		cout << "Результат ECB сохранён в файл encrypted_ecb.bin.\n";
+		cout << "Результат CBC сохранён в файл encrypted_cbc.bin.\n";
+		cout << "\nРабота программы завершена.\n";
 	}
 	catch (const exception &e)
 	{
-		cerr << "Error: " << e.what() << '\n';
+		cerr << "Ошибка: " << e.what() << '\n';
+		return 1;
+	}
+	catch (...)
+	{
+		cerr << "Произошла неизвестная ошибка.\n";
 		return 1;
 	}
 
